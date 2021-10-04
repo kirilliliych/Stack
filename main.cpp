@@ -20,6 +20,5 @@ int main()
 
     StackDtor(&stack);
 
-    printf("ALL");
     return 0;
 }
