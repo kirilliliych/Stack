@@ -217,22 +217,14 @@ void StackDtor(Stack_t *stack)
     #ifdef CANARY_LEVEL_PROTECTION
 
     StackNullCheck(stack);
-    ASSERT_OK(stack);
+
+    free(&(((canary_t *) stack->data)[-1]));
+
+    #else
+
+    free(stack->data);
 
     #endif
-
-    if (stack->data != nullptr)
-    {
-        #ifdef CANARY_LEVEL_PROTECTION
-
-        free(&(((canary_t *) stack->data)[-1]));
-
-        #else
-
-        free(stack->data);
-
-        #endif
-    }
 
     stack->data     = nullptr;
     stack->size     = -1;

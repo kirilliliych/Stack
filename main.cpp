@@ -13,12 +13,13 @@ int main()
         StackPush(&stack, &i);
     }
 
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 9; i++)
     {
         StackPop(&stack);
     }
 
     StackDtor(&stack);
 
+    printf("ALL");
     return 0;
 }

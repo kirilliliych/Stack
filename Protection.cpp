@@ -229,6 +229,7 @@ const char *TextError(Stack_t *stack)
         switch_case(NEGATIVE_CAPACITY);
         switch_case(NULLPTR_TO_ARRAY);
         switch_case(NULL_POP);
+        switch_case(EMPTY_TOP_ATTEMPT);
         switch_case(WRONG_SIZE);
         switch_case(STACK_IS_DESTRUCTED);
         switch_case(WRONG_LEFT_ARRAY_CANARY);
