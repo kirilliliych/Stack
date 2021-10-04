@@ -1,4 +1,4 @@
-# Onegin
+# Stack
 
 The programme is free-to-use for all kinds of developers.
 ### What does the project do
