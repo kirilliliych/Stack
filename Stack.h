@@ -9,7 +9,7 @@
 #include <string.h>
 
 typedef int type;
-static double Poison = 666;
+static int Poison = 666;
 
 struct Stack_t
 {
@@ -42,11 +42,17 @@ struct Stack_t
 };
 
 void StackCtor(Stack_t *stack, int capacity);
+
 void StackDtor(Stack_t *stack);
+
 void StackPush(Stack_t *stack, const type *value);
+
 type StackPop(Stack_t *stack);
+
 type StackTop(Stack_t *stack);
+
 void StackMemoryRealloc(Stack_t *stack);
+
 void StackBackwardMemoryRealloc(Stack_t *stack);
 
 #endif

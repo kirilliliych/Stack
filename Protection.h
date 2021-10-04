@@ -25,14 +25,23 @@ enum Errors
 };
 
 void StackNullCheck(Stack_t *stack);
+
 void FillingPoison(Stack_t *stack);
+
 int  IsValid(Stack_t *stack);
+
 void StackDump(FILE* file, Stack_t *stack);
+
 bool  IfStackDestructed(Stack_t *stack);
+
 const char *TextError(Stack_t *stack);
+
 void PrintArray(FILE *file, Stack_t *stack);
+
 void PlacingCanary(Stack_t *stack, void *temp);
+
 unsigned int StackHashFAQ6(Stack_t *stack);
+
 unsigned int StructHashFAQ6(Stack_t *stack);
 
 #endif
