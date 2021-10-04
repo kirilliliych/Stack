@@ -1,5 +1,17 @@
 #include "Protection.h"
 
+void FillingPoison(Stack_t *stack)
+{
+    assert(stack != nullptr);
+
+    for (size_t poisoner = stack->size; poisoner < stack->capacity; ++poisoner)
+    {
+        stack->data[poisoner] = Poison;
+    }
+}
+
+#ifdef CANARY_LEVEL_PROTECTION
+
 void StackNullCheck(Stack_t *stack)
 {
     if (stack == nullptr)
@@ -14,18 +26,6 @@ void StackNullCheck(Stack_t *stack)
         abort();
     }
 }
-
-void FillingPoison(Stack_t *stack)
-{
-    assert(stack != nullptr);
-
-    for (size_t poisoner = stack->size; poisoner < stack->capacity; ++poisoner)
-    {
-        stack->data[poisoner] = Poison;
-    }
-}
-
-#ifdef CANARY_LEVEL_PROTECTION
 
 int IsValid(Stack_t *stack)
 {

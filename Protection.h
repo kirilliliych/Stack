@@ -32,7 +32,7 @@ int  IsValid(Stack_t *stack);
 
 void StackDump(FILE* file, Stack_t *stack);
 
-bool  IfStackDestructed(Stack_t *stack);
+bool IfStackDestructed(Stack_t *stack);
 
 const char *TextError(Stack_t *stack);
 
