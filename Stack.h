@@ -8,48 +8,46 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef int type;
+typedef int stack_element_t;
 static int Poison = 666;
 
 struct Stack_t
 {
-    #ifdef CANARY_LEVEL_PROTECTION
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        canary_t left_struct_canary = 0;
 
-    canary_t left_struct_canary = 0;
+        const char *name = nullptr;
 
-    const char *name = nullptr;
-
-    int error = 0;
-
-    #endif
+        int error = 0;
+        int status = 0;
+    )
 
     size_t capacity = 0;
     size_t size = 0;
-    type *data = nullptr;
+    stack_element_t *data = nullptr;
 
-    #ifdef HASH_LEVEL_PROTECTION
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        canary_t right_struct_canary = 0;
+    )
 
-    unsigned int stack_hash  = 0;
-    unsigned int struct_hash = 0;
-
-    #endif
-
-    #ifdef CANARY_LEVEL_PROTECTION
-
-    canary_t right_struct_canary = 0;
-
-    #endif
+    IF_HASH_LEVEL_PROTECTION
+    (
+        unsigned int array_hash = 0;
+        unsigned int stack_hash = 0;
+    )
 };
 
 void StackCtor(Stack_t *stack, int capacity);
 
 void StackDtor(Stack_t *stack);
 
-void StackPush(Stack_t *stack, const type *value);
+void StackPush(Stack_t *stack, const stack_element_t *value);
 
-type StackPop(Stack_t *stack);
+stack_element_t StackPop(Stack_t *stack);
 
-type StackTop(Stack_t *stack);
+stack_element_t StackTop(Stack_t *stack);
 
 void StackMemoryRealloc(Stack_t *stack);
 

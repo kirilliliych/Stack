@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Location.h"
+
+static const char *DUMPFILE = "logs.txt";
 
 #define HASH_LEVEL_PROTECTION
 
@@ -14,25 +17,35 @@
 
 #undef NO_PROTECTION
 #define CANARY_LEVEL_PROTECTION
+#define IF_HASH_LEVEL_PROTECTION(code) code
+
+#else
+
+#define IF_HASH_LEVEL_PROTECTION(code)
 
 #endif
 
 #ifdef CANARY_LEVEL_PROTECTION
 
 #undef NO_PROTECTION
-#define ASSERT_OK(stack) if (IsValid(stack))                                                                       \
-                         {                                                                                         \
-                             FILE *logs = fopen("logs.txt", "a");                                                  \
-                             assert(logs != nullptr);                                                              \
-                             fprintf(logs, "ERROR: file %s line %d function %s\n", __FILE__, __LINE__, __func__);  \
-                             StackDump(logs, stack);                                                               \
-                             printf("ERROR: exiting programme, check logs.txt\n");                                 \
-                             fclose(logs);                                                                         \
-                             abort();                                                                              \
+#define ASSERT_OK(stack) if (IsValid(stack))                                                                        \
+                         {                                                                                          \
+                             FILE *logs = fopen(DUMPFILE, "a");                                                     \
+                             location_t location = __LOCATION__;                                                    \
+                             StackDump(logs, stack, location);                                                      \
+                             printf("ERROR: exiting programme, check logs.txt");                                    \
+                             fclose(logs);                                                                          \
+                             abort();                                                                               \
                          }
 
-#define STACK_CONSTRUCT(stack, capacity) stack.name = #stack;                                                      \
+#define STACK_CONSTRUCT(stack, capacity) stack.name = #stack;                                                       \
                                          StackCtor(&stack, capacity)
+
+#define IF_CANARY_LEVEL_PROTECTION(code) code
+
+#else
+
+#define IF_CANARY_LEVEL_PROTECTION(code)
 
 #endif
 
@@ -43,16 +56,18 @@
 
 #define ASSERT_OK(stack)
 #define STACK_CONSTRUCT(stack, capacity) StackCtor(&stack, capacity)
+#define IF_NO_PROTECTION(code) code
+
+#else
+
+#define IF_NO_PROTECTION(code)
 
 #endif
 
-#define switch_case(error_line) case  error_line:                                                                  \
-                                return #error_line
+IF_CANARY_LEVEL_PROTECTION
+(
+    typedef unsigned long long canary_t;
+    const canary_t Canary = 0xBADF00DDEADBEAF;
+)
 
-#ifdef CANARY_LEVEL_PROTECTION
-
-typedef unsigned long long canary_t;
-const canary_t Canary = 0xBADF00DDEADBEAF;
-
-#endif
 #endif

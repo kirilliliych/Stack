@@ -2,78 +2,126 @@
 
 void StackCtor(Stack_t *stack, int capacity)
 {
-    #ifdef CANARY_LEVEL_PROTECTION
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        StackNullCheck(stack);
 
-    StackNullCheck(stack);
+        if (capacity < 0)
+        {
+            stack->error = NEGATIVE_CAPACITY;
+            ASSERT_OK(stack);
+        }
+        else
+        {
+            stack->capacity = capacity;
 
-    if (capacity < 0)
-    {
-        stack->error = NEGATIVE_CAPACITY;
+            if (capacity == 0)
+            {
+                stack->data = nullptr;
+            }
+            else
+            {
+                stack->left_struct_canary  = Canary;
+                stack->right_struct_canary = Canary;
 
-        ASSERT_OK(stack);
-    }
+                void *memory = calloc(stack->capacity * sizeof(stack_element_t) + 2 * sizeof(canary_t), 1);
 
-    if (capacity == 0)
-    {
-        stack->capacity = capacity + 1;
-    }
+                if (memory == nullptr)
+                {
+                    stack->error = OUT_OF_MEMORY;
+                    ASSERT_OK(stack);
+                }
 
-    if (capacity > 0)
-    {
+                PlacingCanary(stack, memory);
+            }
+
+            stack->error = 0;
+            stack->status = CONSTRUCTED;
+        }
+    )
+
+    IF_NO_PROTECTION
+    (
         stack->capacity = capacity;
-    }
 
-    #endif
+        if (capacity == 0)
+        {
+            stack->data == nullptr;
+        }
+        else
+        {
+            stack->data = (stack_element_t *) calloc(stack->capacity, sizeof(stack_element_t));
+        }
+    )
 
-    #ifndef CANARY_LEVEL_PROTECTION
+    stack->size = 0;
 
-    stack->capacity = capacity;
+    IF_HASH_LEVEL_PROTECTION
+    (
+        if (stack->capacity != 0)
+        {
+            FillingPoison(stack);
 
-    void *temp = calloc(stack->capacity, sizeof(type));
+            stack->array_hash = CalculatingHash(((canary_t *) stack->data) - 1, stack->capacity *
+                                                  sizeof(stack_element_t) + 2 * sizeof(canary_t));
 
-    stack->data = (type *) temp;
-
-    #endif
-
-    #ifdef CANARY_LEVEL_PROTECTION
-
-    stack->left_struct_canary  = Canary;
-    stack->right_struct_canary = Canary;
-
-    void *temp = calloc(stack->capacity * sizeof(type) + 2 * sizeof(canary_t), 1);
-
-    if (temp == nullptr)
-    {
-        stack->error = OUT_OF_MEMORY;
-        ASSERT_OK(stack);
-    }
-
-    PlacingCanary(stack, temp);
-
-    stack->error = 0;
-
-    #endif
-
-    stack->size  = 0;
-
-    FillingPoison(stack);
-
-    #ifdef HASH_LEVEL_PROTECTION
-
-    stack->stack_hash  = StackHashFAQ6(stack);
-    stack->struct_hash = StructHashFAQ6(stack);
-
-    #endif
+            stack->stack_hash = CalculatingHash(stack, 2 * sizeof(size_t) + sizeof(char *) + sizeof(stack_element_t *) +
+                                                2 * sizeof(canary_t) + 2 * sizeof(int));
+        }
+    )
 }
 
-void StackPush(Stack_t *stack, const type *value)
+void StackPush(Stack_t *stack, const stack_element_t *value)
 {
-    #ifdef CANARY_LEVEL_PROTECTION
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        StackNullCheck(stack);
+    )
 
-    StackNullCheck(stack);
-    ASSERT_OK(stack);
+    if (stack->capacity == 0)
+    {
+        ++stack->capacity;
 
-    #endif
+        IF_NO_PROTECTION
+        (
+            stack->data = (stack_element_t *) calloc(stack->capacity, sizeof(stack_element_t));
+        )
+
+        IF_CANARY_LEVEL_PROTECTION
+        (
+            stack->left_struct_canary  = Canary;
+            stack->right_struct_canary = Canary;
+
+            void *memory = calloc(stack->capacity * sizeof(stack_element_t) + 2 * sizeof(canary_t), 1);
+
+            if (memory == nullptr)
+            {
+                stack->error = OUT_OF_MEMORY;
+                ASSERT_OK(stack);
+            }
+
+            PlacingCanary(stack, memory);
+
+            stack->error = 0;
+            stack->status = CONSTRUCTED;
+
+            IF_HASH_LEVEL_PROTECTION
+            (
+                FillingPoison(stack);
+
+                stack->array_hash = CalculatingHash(((canary_t *) stack->data) - 1, stack->capacity *
+                                                      sizeof(stack_element_t) + 2 * sizeof(canary_t));
+
+                stack->stack_hash = CalculatingHash(stack, 2 * sizeof(size_t) + sizeof(char *) + sizeof(stack_element_t *) +
+                                                    2 * sizeof(canary_t) + 2 * sizeof(int));
+            )
+        )
+    }
+
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        ASSERT_OK(stack);
+    )
 
     if (stack->capacity - 1 == stack->size)
     {
@@ -84,24 +132,31 @@ void StackPush(Stack_t *stack, const type *value)
 
     stack->data[stack->size++] = *value;
 
-    #ifdef HASH_LEVEL_PROTECTION
+    IF_HASH_LEVEL_PROTECTION
+    (
+        stack->array_hash  = CalculatingHash(((canary_t *) stack->data) - 1, stack->capacity *
+                                               sizeof(stack_element_t) + 2 * sizeof(canary_t));
 
-    stack->stack_hash  = StackHashFAQ6(stack);
-    stack->struct_hash = StructHashFAQ6(stack);
-
-    #endif
+        stack->stack_hash = CalculatingHash(stack, 2 * sizeof(size_t) + sizeof(char *) + sizeof(stack_element_t *) +
+                                            2 * sizeof(canary_t) + 2 * sizeof(int));
+    )
 
     ASSERT_OK(stack);
 }
 
-type StackPop(Stack_t *stack)
+stack_element_t StackPop(Stack_t *stack)
 {
-    #ifdef CANARY_LEVEL_PROTECTION
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        StackNullCheck(stack);
+        ASSERT_OK(stack);
+    )
 
-    StackNullCheck(stack);
-    ASSERT_OK(stack);
-
-    #endif
+    if (stack->size == 0)
+    {
+        stack->error = NULL_POP;
+        ASSERT_OK(stack);
+    }
 
     if ((stack->capacity >= 4) && (stack->size < ((stack->capacity) / 4)))
     {
@@ -110,77 +165,80 @@ type StackPop(Stack_t *stack)
 
     ASSERT_OK(stack);
 
-    type temp = stack->data[--(stack->size)];
+    stack_element_t popped_element = stack->data[--(stack->size)];
     stack->data[stack->size] = Poison;
 
-    #ifdef HASH_LEVEL_PROTECTION
+    IF_HASH_LEVEL_PROTECTION
+    (
+        stack->array_hash = CalculatingHash(((canary_t *) stack->data) - 1, stack->capacity *
+                                               sizeof(stack_element_t) + 2 * sizeof(canary_t));
 
-    stack->stack_hash  = StackHashFAQ6(stack);
-    stack->struct_hash = StructHashFAQ6(stack);
+        stack->stack_hash = CalculatingHash(stack, 2 * sizeof(size_t) + sizeof(char *) + sizeof(stack_element_t *) +
+                                            2 * sizeof(canary_t) + 2 * sizeof(int));
+    )
 
-    #endif
-
-    return temp;
+    return popped_element;
 }
 
-type StackTop(Stack_t *stack)
+stack_element_t StackTop(Stack_t *stack)
 {
-    #ifdef CANARY_LEVEL_PROTECTION
-
-    StackNullCheck(stack);
-    ASSERT_OK(stack);
-
-    if (stack->size == 0)
-    {
-        stack->error = EMPTY_TOP_ATTEMPT;
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        StackNullCheck(stack);
         ASSERT_OK(stack);
-    }
 
-    #endif
+        if (stack->size == 0)
+        {
+            stack->error = EMPTY_TOP_ATTEMPT;
+            ASSERT_OK(stack);
+        }
+    )
 
     return stack->data[stack->size - 1];
 }
 
 void StackMemoryRealloc(Stack_t *stack)
 {
-    #ifdef CANARY_LEVEL_PROTECTION
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        StackNullCheck(stack);
 
-    StackNullCheck(stack);
+        void *memory = realloc(((canary_t *) stack->data) - 1, 2 * stack->capacity * sizeof(stack_element_t) + 2 * sizeof(canary_t));
 
-    void *temp = realloc(&((canary_t *) stack->data)[-1], 2 * stack->capacity * sizeof(type) + 2 * sizeof(canary_t));
+        if (memory == nullptr)
+        {
+            stack->error = OUT_OF_MEMORY;
+            ASSERT_OK(stack);
+        }
+    )
 
-    if (temp == nullptr)
-    {
-        stack->error = OUT_OF_MEMORY;
-        ASSERT_OK(stack);
-    }
-
-    #else
-
-    void *temp = realloc(stack->data, 2 * stack->capacity * sizeof(type));
-
-    #endif
+    IF_NO_PROTECTION
+    (
+        void *memory = realloc(stack->data, 2 * stack->capacity * sizeof(stack_element_t));
+    )
 
     stack->capacity *= 2;
 
-    #ifdef CANARY_LEVEL_PROTECTION
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        PlacingCanary(stack, memory);
+    )
 
-    PlacingCanary(stack, temp);
+    IF_NO_PROTECTION
+    (
+        stack->data = (stack_element_t *) memory;
+    )
 
-    #else
+    IF_HASH_LEVEL_PROTECTION
+    (
+        FillingPoison(stack);
 
-    stack->data = (type *) temp;
+        stack->array_hash = CalculatingHash(((canary_t *) stack->data) - 1, stack->capacity *
+                                               sizeof(stack_element_t) + 2 * sizeof(canary_t));
 
-    #endif
-
-    FillingPoison(stack);
-
-    #ifdef HASH_LEVEL_PROTECTION
-
-    stack->stack_hash  = StackHashFAQ6(stack);
-    stack->struct_hash = StructHashFAQ6(stack);
-
-    #endif
+        stack->stack_hash = CalculatingHash(stack, 2 * sizeof(size_t) + sizeof(char *) + sizeof(stack_element_t *) +
+                                            2 * sizeof(canary_t) + 2 * sizeof(int));
+    )
 }
 
 void StackBackwardMemoryRealloc(Stack_t *stack)
@@ -189,60 +247,61 @@ void StackBackwardMemoryRealloc(Stack_t *stack)
 
     stack->capacity /= 4;
 
-    #ifdef CANARY_LEVEL_PROTECTION
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        void *memory = realloc(((canary_t *) stack->data) - 1, (stack->capacity + 1) * sizeof(stack_element_t) + 2 * sizeof(canary_t));
 
-    void *temp = realloc(&((canary_t *) stack->data)[-1], (stack->capacity + 1) * sizeof(type) + 2 * sizeof(canary_t));
+        PlacingCanary(stack, memory);
+    )
 
-    PlacingCanary(stack, temp);
+    IF_NO_PROTECTION
+    (
+        void *memory = realloc(stack->data, (stack->capacity + 1) * sizeof(stack_element_t));
+        stack->data = (stack_element_t *) memory;
+    )
 
-    #else
+    IF_HASH_LEVEL_PROTECTION
+    (
+        stack->array_hash = CalculatingHash(((canary_t *) stack->data) - 1, stack->capacity *
+                                               sizeof(stack_element_t) + 2 * sizeof(canary_t));
 
-    void *temp = realloc(stack->data, (stack->capacity + 1) * sizeof(type));
-    stack->data = (type *) temp;
-
-    #endif
-
-    #ifdef HASH_LEVEL_PROTECTION
-
-    stack->stack_hash  = StackHashFAQ6(stack);
-    stack->struct_hash = StructHashFAQ6(stack);
-
-    #endif
+        stack->stack_hash = CalculatingHash(stack, 2 * sizeof(size_t) + sizeof(char *) + sizeof(stack_element_t *) +
+                                            2 * sizeof(canary_t) + 2 * sizeof(int));
+    )
 
     ASSERT_OK(stack);
 }
 
 void StackDtor(Stack_t *stack)
 {
-    #ifdef CANARY_LEVEL_PROTECTION
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        StackNullCheck(stack);
+        ASSERT_OK(stack);
 
-    StackNullCheck(stack);
+        free(((canary_t *) stack->data) - 1);
+    )
 
-    free(&(((canary_t *) stack->data)[-1]));
-
-    #else
-
-    free(stack->data);
-
-    #endif
+    IF_NO_PROTECTION
+    (
+        free(stack->data);
+    )
 
     stack->data     = nullptr;
     stack->size     = -1;
     stack->capacity = -1;
 
-    #ifdef CANARY_LEVEL_PROTECTION
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        stack->error = 0;
+        stack->status = DESTRUCTED;
+        stack->left_struct_canary  = -1;
+        stack->right_struct_canary = -1;
+    )
 
-    stack->error = 0;
-
-    stack->left_struct_canary  = -1;
-    stack->right_struct_canary = -1;
-
-    #endif
-
-    #ifdef HASH_LEVEL_PROTECTION
-
-    stack->stack_hash   = -1;
-    stack->struct_hash  = -1;
-
-    #endif
+    IF_HASH_LEVEL_PROTECTION
+    (
+        stack->array_hash  = -1;
+        stack->stack_hash  = -1;
+    )
 }
