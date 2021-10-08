@@ -34,7 +34,6 @@ static const char *DUMPFILE = "logs.txt";
                              location_t location = __LOCATION__;                                                    \
                              StackDump(logs, stack, location);                                                      \
                              printf("ERROR: exiting programme, check logs.txt");                                    \
-                             fclose(logs);                                                                          \
                              abort();                                                                               \
                          }
 

@@ -1,8 +1,8 @@
 #include "Protection.h"
 
-void StackDump(FILE* file, Stack_t *stack, location_t location)
+void StackDump(FILE* out, Stack_t *stack, location_t location)
 {
-    assert(file != nullptr);
+    assert(out != nullptr);
 
     IF_CANARY_LEVEL_PROTECTION
     (
@@ -10,7 +10,7 @@ void StackDump(FILE* file, Stack_t *stack, location_t location)
 
         const char *error_code = TextError(stack);
 
-        fprintf(file,     "ERROR: file %s line %d function %s\n"
+        fprintf(out,     "ERROR: file %s line %d function %s\n"
                           "Stack (ERROR #%d: %s [%p] \"%s\")\n",
 
                           location.file, location.line, location.func,
@@ -24,10 +24,10 @@ void StackDump(FILE* file, Stack_t *stack, location_t location)
 
     IF_NO_PROTECTION
     (
-        fprintf(file, "Stack ");
+        fprintf(out,     "Stack ");
     )
 
-    fprintf(file,         "{\n"
+    fprintf(out,          "{\n"
                           "\tsize = %u\n"
                           "\tcapacity = %u\n",
 
@@ -36,7 +36,7 @@ void StackDump(FILE* file, Stack_t *stack, location_t location)
 
     IF_CANARY_LEVEL_PROTECTION
     (
-        fprintf(file,     "\tleft_struct_canary  = %llx\n"
+        fprintf(out,      "\tleft_struct_canary  = %llx\n"
                           "\tright_struct_canary = %llx\n",
 
                           stack->left_struct_canary,
@@ -44,7 +44,7 @@ void StackDump(FILE* file, Stack_t *stack, location_t location)
 
         if (stack->data != nullptr)
         {
-            fprintf(file, "\tleft_array_canary   = %llx\n"
+            fprintf(out,  "\tleft_array_canary   = %llx\n"
                           "\tright_array_canary  = %llx\n",
 
                           ((canary_t *) stack->data)[-1],
@@ -54,14 +54,14 @@ void StackDump(FILE* file, Stack_t *stack, location_t location)
 
     IF_HASH_LEVEL_PROTECTION
     (
-        fprintf(file,     "\tstack_hash = %x\n"
+        fprintf(out,      "\tstack_hash = %x\n"
                           "\tarray_hash = %x\n",
 
                           stack->stack_hash,
                           stack->array_hash);
     )
 
-    fprintf(file,         "\tdata[%p]\n",
+    fprintf(out,          "\tdata[%p]\n",
 
                           stack->data);
 
@@ -71,16 +71,16 @@ void StackDump(FILE* file, Stack_t *stack, location_t location)
         (
             if (stack->error != NEGATIVE_CAPACITY)
             {
-                fprintf(file,     "\t{\n");
-                PrintArray(file, stack);
-                fprintf(file,     "\t}\n");
+                fprintf(out,      "\t{\n");
+                PrintArray(out,   stack);
+                fprintf(out,      "\t}\n");
             }
         )
     }
 
-    fprintf(file,         "}\n\n\n");
+    fprintf(out,          "}\n\n\n");
 
-    fclose(file);
+    fclose(out);
 }
 
 IF_CANARY_LEVEL_PROTECTION
