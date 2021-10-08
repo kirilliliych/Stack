@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+const double EXPAND_MEMORY_COEF = 2;
+
 typedef int stack_element_t;
 static int Poison = 666;
 

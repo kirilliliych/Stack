@@ -10,11 +10,11 @@ void StackDump(FILE* out, Stack_t *stack, location_t location)
 
         const char *error_code = TextError(stack);
 
-        fprintf(out,     "ERROR: file %s line %d function %s\n"
-                          "Stack (ERROR #%d: %s [%p] \"%s\")\n",
+        fprintf(out, "ERROR: file %s line %d function %s\n"
+                     "Stack (ERROR #%d: %s [%p] \"%s\")\n",
 
-                          location.file, location.line, location.func,
-                          stack->error, error_code, stack, stack->name);
+                     location.file, location.line, location.func,
+                     stack->error, error_code, stack, stack->name);
 
         if ((stack->error == STACK_IS_DESTRUCTED) || (stack->error == USING_STACK_ZERO_CAPACITY))
         {
@@ -24,63 +24,81 @@ void StackDump(FILE* out, Stack_t *stack, location_t location)
 
     IF_NO_PROTECTION
     (
-        fprintf(out,     "Stack ");
+        fprintf(out, "Stack\n");
     )
 
-    fprintf(out,          "{\n"
-                          "\tsize = %u\n"
-                          "\tcapacity = %u\n",
+    fprintf(out, "{\n"
+                 "\tsize = %u\n"
+                 "\tcapacity = %u\n",
 
-                          stack->size,
-                          stack->capacity);
+                 stack->size,
+                 stack->capacity);
 
     IF_CANARY_LEVEL_PROTECTION
     (
-        fprintf(out,      "\tleft_struct_canary  = %llx\n"
-                          "\tright_struct_canary = %llx\n",
+        fprintf(out, "\tleft_struct_canary  = %llx\n"
+                     "\tright_struct_canary = %llx\n",
 
-                          stack->left_struct_canary,
-                          stack->right_struct_canary);
+                     stack->left_struct_canary,
+                     stack->right_struct_canary);
 
         if (stack->data != nullptr)
         {
-            fprintf(out,  "\tleft_array_canary   = %llx\n"
-                          "\tright_array_canary  = %llx\n",
+            fprintf(out, "\tleft_array_canary   = %llx\n"
+                         "\tright_array_canary  = %llx\n",
 
-                          ((canary_t *) stack->data)[-1],
-                          *((canary_t *) (stack->data + stack->capacity)));
+                         ((canary_t *) stack->data)[-1],
+                         *((canary_t *) (stack->data + stack->capacity)));
         }
     )
 
     IF_HASH_LEVEL_PROTECTION
     (
-        fprintf(out,      "\tstack_hash = %x\n"
-                          "\tarray_hash = %x\n",
+        fprintf(out, "\tstack_hash = %x\n"
+                     "\tarray_hash = %x\n",
 
-                          stack->stack_hash,
-                          stack->array_hash);
+                     stack->stack_hash,
+                     stack->array_hash);
     )
 
-    fprintf(out,          "\tdata[%p]\n",
+    fprintf(out, "\tdata[%p]\n",
 
-                          stack->data);
+                 stack->data);
 
     if (stack->data != nullptr)
     {
-        IF_CANARY_LEVEL_PROTECTION
-        (
-            if (stack->error != NEGATIVE_CAPACITY)
-            {
-                fprintf(out,      "\t{\n");
-                PrintArray(out,   stack);
-                fprintf(out,      "\t}\n");
-            }
-        )
+        if (stack->error != NEGATIVE_CAPACITY)
+        {
+            fprintf(out, "\t{\n");
+            PrintArray(out, stack);
+            fprintf(out, "\t}\n");
+        }
     }
 
-    fprintf(out,          "}\n\n\n");
+    fprintf(out, "}\n\n\n");
 
     fclose(out);
+}
+
+void PrintArray(FILE *file, Stack_t *stack)
+{
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        StackNullCheck(stack);
+    )
+
+    for (size_t cur_elem = 0; cur_elem < stack->size; ++cur_elem)
+    {
+        fprintf(file, "\t\t*[%d] = %lg\n", cur_elem, stack->data[cur_elem]);
+    }
+
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        for (size_t cur_elem = stack->size; cur_elem < stack->capacity; ++cur_elem)
+        {
+            fprintf(file, "\t\t[%d] = %lg (Poison!)\n", cur_elem, stack->data[cur_elem]);
+        }
+    )
 }
 
 IF_CANARY_LEVEL_PROTECTION
@@ -223,8 +241,8 @@ IF_CANARY_LEVEL_PROTECTION
     {
         StackNullCheck(stack);
 
-        #define SWITCH_CASE_(error_line) case  error_line:   \
-                                        return #error_line
+        #define SWITCH_CASE_(error_line) case   error_line:   \
+                                         return #error_line
         switch (stack->error)
         {
             case 0: return "NO_ERRORS";
@@ -248,26 +266,8 @@ IF_CANARY_LEVEL_PROTECTION
             default: return "UNKNOWN ERROR";
         }
 
-        #undef SWITCH_CASE_(error_line)
+        //#undef SWITCH_CASE_(error_line)
 
-    }
-
-    void PrintArray(FILE *file, Stack_t *stack)
-    {
-        StackNullCheck(stack);
-
-        for (size_t cur_elem = 0; cur_elem < stack->size; ++cur_elem)
-        {
-            fprintf(file, "\t\t*[%d] = %lg\n", cur_elem, stack->data[cur_elem]);
-        }
-
-        IF_NO_PROTECTION
-        (
-            for (size_t cur_elem = stack->size; cur_elem < stack->capacity; ++cur_elem)
-            {
-                fprintf(file, "\t\t[%d] = %lg (Poison!)\n", cur_elem, stack->data[cur_elem]);
-            }
-        )
     }
 
     void PlacingCanary(Stack_t *stack, void *memory)

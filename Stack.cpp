@@ -149,14 +149,14 @@ stack_element_t StackPop(Stack_t *stack)
     IF_CANARY_LEVEL_PROTECTION
     (
         StackNullCheck(stack);
+
+        if (stack->size == 0)
+        {
+            stack->error = NULL_POP;
+        }
+
         ASSERT_OK(stack);
     )
-
-    if (stack->size == 0)
-    {
-        stack->error = NULL_POP;
-        ASSERT_OK(stack);
-    }
 
     if ((stack->capacity >= 4) && (stack->size < ((stack->capacity) / 4)))
     {
@@ -203,7 +203,7 @@ void StackMemoryRealloc(Stack_t *stack)
     (
         StackNullCheck(stack);
 
-        void *memory = realloc(((canary_t *) stack->data) - 1, 2 * stack->capacity * sizeof(stack_element_t) + 2 * sizeof(canary_t));
+        void *memory = realloc(((canary_t *) stack->data) - 1, EXPAND_MEMORY_COEF * stack->capacity * sizeof(stack_element_t) + 2 * sizeof(canary_t));
 
         if (memory == nullptr)
         {
@@ -214,10 +214,10 @@ void StackMemoryRealloc(Stack_t *stack)
 
     IF_NO_PROTECTION
     (
-        void *memory = realloc(stack->data, 2 * stack->capacity * sizeof(stack_element_t));
+        void *memory = realloc(stack->data, EXPAND_MEMORY_COEF * stack->capacity * sizeof(stack_element_t));
     )
 
-    stack->capacity *= 2;
+    stack->capacity *= EXPAND_MEMORY_COEF;
 
     IF_CANARY_LEVEL_PROTECTION
     (
