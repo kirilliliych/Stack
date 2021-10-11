@@ -118,10 +118,7 @@ void StackPush(Stack_t *stack, const stack_element_t *value)
         )
     }
 
-    IF_CANARY_LEVEL_PROTECTION
-    (
-        ASSERT_OK(stack);
-    )
+    ASSERT_OK(stack);
 
     if (stack->capacity - 1 == stack->size)
     {
@@ -140,8 +137,6 @@ void StackPush(Stack_t *stack, const stack_element_t *value)
         stack->stack_hash = CalculatingHash(stack, 2 * sizeof(size_t) + sizeof(char *) + sizeof(stack_element_t *) +
                                             2 * sizeof(canary_t) + 2 * sizeof(int));
     )
-
-    ASSERT_OK(stack);
 }
 
 stack_element_t StackPop(Stack_t *stack)
