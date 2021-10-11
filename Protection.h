@@ -42,8 +42,6 @@ int  IsValid(Stack_t *stack);
 
 int UsingStackZeroCapacity(Stack_t *stack);
 
-void StackDump(FILE* out, Stack_t *stack, location_t location);
-
 const char *TextError(Stack_t *stack);
 
 void PrintArray(FILE *file, Stack_t *stack);
