@@ -241,33 +241,28 @@ IF_CANARY_LEVEL_PROTECTION
     {
         StackNullCheck(stack);
 
-        #define SWITCH_CASE_(error_line) case   error_line:   \
-                                         return #error_line
         switch (stack->error)
         {
-            case 0: return "NO_ERRORS";
-            SWITCH_CASE_(SIZE_OUT_OF_CAPACITY);
-            SWITCH_CASE_(OUT_OF_MEMORY);
-            SWITCH_CASE_(NEGATIVE_SIZE);
-            SWITCH_CASE_(NEGATIVE_CAPACITY);
-            SWITCH_CASE_(USING_STACK_ZERO_CAPACITY);
-            SWITCH_CASE_(NULLPTR_TO_ARRAY);
-            SWITCH_CASE_(NULL_POP);
-            SWITCH_CASE_(EMPTY_TOP_ATTEMPT);
-            SWITCH_CASE_(WRONG_SIZE);
-            SWITCH_CASE_(STACK_IS_DESTRUCTED);
-            SWITCH_CASE_(STACK_IS_NOT_CONSTRUCTED);
-            SWITCH_CASE_(WRONG_LEFT_ARRAY_CANARY);
-            SWITCH_CASE_(WRONG_RIGHT_ARRAY_CANARY);
-            SWITCH_CASE_(WRONG_LEFT_STRUCT_CANARY);
-            SWITCH_CASE_(WRONG_RIGHT_STRUCT_CANARY);
-            SWITCH_CASE_(WRONG_ARRAY_HASH);
-            SWITCH_CASE_(WRONG_STACK_HASH);
+            case 0:  return "NO_ERRORS";
+            case 1:  return "SIZE_OUT_OF_CAPACITY";
+            case 2:  return "OUT_OF_MEMORY";
+            case 3:  return "NEGATIVE_SIZE";
+            case 4:  return "NEGATIVE_CAPACITY";
+            case 5:  return "USING_STACK_ZERO_CAPACITY";
+            case 6:  return "NULLPTR_TO_ARRAY";
+            case 7:  return "NULL_POP";
+            case 8:  return "EMPTY_TOP_ATTEMPT";
+            case 9:  return "WRONG_SIZE";
+            case 10: return "STACK_IS_DESTRUCTED";
+            case 11: return "STACK_IS_NOT_CONSTRUCTED";
+            case 12: return "WRONG_LEFT_ARRAY_CANARY";
+            case 13: return "WRONG_RIGHT_ARRAY_CANARY";
+            case 14: return "WRONG_LEFT_STRUCT_CANARY";
+            case 15: return "WRONG_RIGHT_STRUCT_CANARY";
+            case 16: return "WRONG_ARRAY_HASH";
+            case 17: return "WRONG_STACK_HASH";
             default: return "UNKNOWN ERROR";
         }
-
-        //#undef SWITCH_CASE_(error_line)
-
     }
 
     void PlacingCanary(Stack_t *stack, void *memory)
