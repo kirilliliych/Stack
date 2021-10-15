@@ -13,7 +13,7 @@ enum Errors
     OUT_OF_MEMORY,
     NEGATIVE_SIZE,
     NEGATIVE_CAPACITY,
-    USING_STACK_ZERO_CAPACITY,
+    STACK_USING_ZERO_CAPACITY,
     NULLPTR_TO_ARRAY,
     NULL_POP,
     EMPTY_TOP_ATTEMPT,
@@ -49,5 +49,7 @@ void PrintArray(FILE *file, Stack_t *stack);
 void PlacingCanary(Stack_t *stack, void *temp);
 
 unsigned int CalculatingHash(const void *hash_from, size_t bytes_to_hash);
+
+void PlacingHash(Stack_t *stack);
 
 #endif

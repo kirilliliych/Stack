@@ -4,7 +4,7 @@ int main()
 {
     Stack_t stack = {};
 
-    STACK_CONSTRUCT(stack, 1);
+    STACK_CONSTRUCT(stack, 0);
 
     int value = 20;
 

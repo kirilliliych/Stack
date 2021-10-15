@@ -10,6 +10,7 @@
 #include "Location.h"
 
 static const char *DUMPFILE = "logs.txt";
+static FILE* logs = fopen(DUMPFILE, "a");
 
 #define HASH_LEVEL_PROTECTION
 
@@ -30,7 +31,6 @@ static const char *DUMPFILE = "logs.txt";
 #undef NO_PROTECTION
 #define ASSERT_OK(stack) if (IsValid(stack))                                                                        \
                          {                                                                                          \
-                             FILE *logs = fopen(DUMPFILE, "a");                                                     \
                              location_t location = __LOCATION__;                                                    \
                              StackDump(logs, stack, location);                                                      \
                              printf("ERROR: exiting programme, check logs.txt");                                    \

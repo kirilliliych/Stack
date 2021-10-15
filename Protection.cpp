@@ -1,6 +1,6 @@
 #include "Protection.h"
 
-void PrintArray(FILE *file, Stack_t *stack)
+void PrintArray(FILE *logs, Stack_t *stack)
 {
     IF_CANARY_LEVEL_PROTECTION
     (
@@ -9,14 +9,14 @@ void PrintArray(FILE *file, Stack_t *stack)
 
     for (size_t cur_elem = 0; cur_elem < stack->size; ++cur_elem)
     {
-        fprintf(file, "\t\t*[%d] = %lg\n", cur_elem, stack->data[cur_elem]);
+        fprintf(logs, "\t\t*[%d] = %lg\n", cur_elem, stack->data[cur_elem]);
     }
 
     IF_CANARY_LEVEL_PROTECTION
     (
         for (size_t cur_elem = stack->size; cur_elem < stack->capacity; ++cur_elem)
         {
-            fprintf(file, "\t\t[%d] = %lg (Poison!)\n", cur_elem, stack->data[cur_elem]);
+            fprintf(logs, "\t\t[%d] = %lg (Poison!)\n", cur_elem, stack->data[cur_elem]);
         }
     )
 }
@@ -27,13 +27,11 @@ IF_CANARY_LEVEL_PROTECTION
     {
         if (stack == nullptr)
         {
-            FILE *logs = fopen(DUMPFILE, "a");
-
             fprintf(logs, "Stack (ERROR NULLPTR) [0x000000], file %s line %d function %s\n\n\n", __FILE__, __LINE__, __func__);
 
             printf("ERROR: exiting programme, check logs.txt\n");
 
-            fclose(logs);
+            fflush(logs);
 
             abort();
         }
@@ -45,7 +43,7 @@ IF_CANARY_LEVEL_PROTECTION
             (stack->capacity == 0)   &&
             (stack->size == 0))
         {
-            return USING_STACK_ZERO_CAPACITY;
+            return STACK_USING_ZERO_CAPACITY;
         }
 
         return 0;
@@ -63,8 +61,8 @@ IF_CANARY_LEVEL_PROTECTION
         {
             if (UsingStackZeroCapacity(stack))
             {
-                stack->error = USING_STACK_ZERO_CAPACITY;
-                return USING_STACK_ZERO_CAPACITY;
+                stack->error = STACK_USING_ZERO_CAPACITY;
+                return STACK_USING_ZERO_CAPACITY;
             }
 
             if (stack->status == DESTRUCTED)
@@ -168,7 +166,7 @@ IF_CANARY_LEVEL_PROTECTION
             case 2:  return "OUT_OF_MEMORY";
             case 3:  return "NEGATIVE_SIZE";
             case 4:  return "NEGATIVE_CAPACITY";
-            case 5:  return "USING_STACK_ZERO_CAPACITY";
+            case 5:  return "STACK_USING_ZERO_CAPACITY";
             case 6:  return "NULLPTR_TO_ARRAY";
             case 7:  return "NULL_POP";
             case 8:  return "EMPTY_TOP_ATTEMPT";
@@ -235,4 +233,14 @@ IF_HASH_LEVEL_PROTECTION
 
         return hash;
     }
+
+    void PlacingHash(Stack_t *stack)
+    {
+        stack->array_hash = CalculatingHash(((canary_t *) stack->data) - 1, stack->capacity *
+                                                  sizeof(stack_element_t) + 2 * sizeof(canary_t));
+
+        stack->stack_hash = CalculatingHash(stack, 2 * sizeof(size_t) + sizeof(char *) + sizeof(stack_element_t *) +
+                                                2 * sizeof(canary_t) + 2 * sizeof(int));
+    }
+
 )

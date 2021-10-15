@@ -11,7 +11,7 @@
 const double EXPAND_MEMORY_COEF = 2;
 
 typedef int stack_element_t;
-static int Poison = 666;
+static stack_element_t Poison = 666;
 
 struct Stack_t
 {
@@ -42,6 +42,8 @@ struct Stack_t
 };
 
 void StackCtor(Stack_t *stack, int capacity);
+
+void MemoryCtor(Stack_t *stack, void *new_memory);
 
 void StackDtor(Stack_t *stack);
 
