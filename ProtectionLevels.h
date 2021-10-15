@@ -9,9 +9,6 @@
 #include <string.h>
 #include "Location.h"
 
-static const char *DUMPFILE = "logs.txt";
-static FILE* logs = fopen(DUMPFILE, "a");
-
 #define HASH_LEVEL_PROTECTION
 
 #ifdef HASH_LEVEL_PROTECTION

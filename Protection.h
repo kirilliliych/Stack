@@ -4,6 +4,7 @@
 
 #include "ProtectionLevels.h"
 #include "Stack.h"
+#include "logs.h"
 
 static const int NEGATIVE_SIZE_T = 10000000;
 
@@ -43,8 +44,6 @@ int  IsValid(Stack_t *stack);
 int UsingStackZeroCapacity(Stack_t *stack);
 
 const char *TextError(Stack_t *stack);
-
-void PrintArray(FILE *file, Stack_t *stack);
 
 void PlacingCanary(Stack_t *stack, void *temp);
 

@@ -169,11 +169,14 @@ void StackMemoryRealloc(Stack_t *stack)
 
     void *memory = realloc(old_memory_pointer, EXPAND_MEMORY_COEF * stack->capacity * sizeof(stack_element_t) + place_for_canary * sizeof(canary_t));
 
-    if (memory == nullptr)
-    {
-        stack->error = OUT_OF_MEMORY;
-        ASSERT_OK(stack);
-    }
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        if (memory == nullptr)
+        {
+            stack->error = OUT_OF_MEMORY;
+            ASSERT_OK(stack);
+        }
+    )
 
     stack->capacity *= EXPAND_MEMORY_COEF;
 
@@ -208,6 +211,8 @@ void StackBackwardMemoryRealloc(Stack_t *stack)
 
     void *memory = realloc(old_memory_pointer, (stack->capacity + 1) * sizeof(stack_element_t) + place_for_canary * sizeof(canary_t));
 
+    MemoryCtor(stack, memory);
+
     IF_HASH_LEVEL_PROTECTION
     (
         PlacingHash(stack);
@@ -218,6 +223,8 @@ void StackBackwardMemoryRealloc(Stack_t *stack)
 
 void StackDtor(Stack_t *stack)
 {
+    CloseLogs();
+
     IF_CANARY_LEVEL_PROTECTION
     (
         StackNullCheck(stack);
@@ -260,11 +267,11 @@ void StackDump(FILE* out, Stack_t *stack, location_t location)
 
         const char *error_code = TextError(stack);
 
-        fprintf(out, "ERROR: file %s line %d function %s\n"
-                     "Stack (ERROR #%d: %s [%p] \"%s\")\n",
+        PrintToLogs("ERROR: file %s line %d function %s\n"
+                    "Stack (ERROR #%d: %s [%p] \"%s\")\n",
 
-                     location.file, location.line, location.func,
-                     stack->error, error_code, stack, stack->name);
+                    location.file, location.line, location.func,
+                    stack->error, error_code, stack, stack->name);
 
         if ((stack->error == STACK_IS_DESTRUCTED) || (stack->error == STACK_USING_ZERO_CAPACITY))
         {
@@ -274,58 +281,79 @@ void StackDump(FILE* out, Stack_t *stack, location_t location)
 
     IF_NO_PROTECTION
     (
-        fprintf(out, "Stack\n");
+        PrintToLogs(out, "Stack\n");
     )
 
-    fprintf(out, "{\n"
-                 "\tsize = %u\n"
-                 "\tcapacity = %u\n",
+    PrintToLogs("{\n"
+                "\tsize = %u\n"
+                "\tcapacity = %u\n",
 
-                 stack->size,
-                 stack->capacity);
+                stack->size,
+                stack->capacity);
 
     IF_CANARY_LEVEL_PROTECTION
     (
-        fprintf(out, "\tleft_struct_canary  = %llx\n"
-                     "\tright_struct_canary = %llx\n",
+        PrintToLogs("\tleft_struct_canary  = %llx\n"
+                    "\tright_struct_canary = %llx\n",
 
-                     stack->left_struct_canary,
-                     stack->right_struct_canary);
+                    stack->left_struct_canary,
+                    stack->right_struct_canary);
 
         if (stack->data != nullptr)
         {
-            fprintf(out, "\tleft_array_canary   = %llx\n"
-                         "\tright_array_canary  = %llx\n",
+            PrintToLogs("\tleft_array_canary   = %llx\n"
+                        "\tright_array_canary  = %llx\n",
 
-                         ((canary_t *) stack->data)[-1],
-                         *((canary_t *) (stack->data + stack->capacity)));
+                        ((canary_t *) stack->data)[-1],
+                        *((canary_t *) (stack->data + stack->capacity)));
         }
     )
 
     IF_HASH_LEVEL_PROTECTION
     (
-        fprintf(out, "\tstack_hash = %x\n"
-                     "\tarray_hash = %x\n",
+        PrintToLogs("\tstack_hash = %x\n"
+                    "\tarray_hash = %x\n",
 
-                     stack->stack_hash,
-                     stack->array_hash);
+                    stack->stack_hash,
+                    stack->array_hash);
     )
 
-    fprintf(out, "\tdata[%p]\n",
+    PrintToLogs("\tdata[%p]\n",
 
-                 stack->data);
+                stack->data);
 
     if (stack->data != nullptr)
     {
         if (stack->error != NEGATIVE_CAPACITY)
         {
-            fprintf(out, "\t{\n");
+            PrintToLogs("\t{\n");
             PrintArray(out, stack);
-            fprintf(out, "\t}\n");
+            PrintToLogs("\t}\n");
         }
     }
 
-    fprintf(out, "}\n\n\n");
+    PrintToLogs("}\n\n\n");
 
     fflush(out);
+}
+
+void PrintArray(FILE *out, Stack_t *stack)
+{
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        StackNullCheck(stack);
+    )
+
+    for (size_t cur_elem = 0; cur_elem < stack->size; ++cur_elem)
+    {
+        PrintToLogs("\t\t*[%d] = %lg\n", cur_elem, stack->data[cur_elem]);
+    }
+
+    IF_CANARY_LEVEL_PROTECTION
+    (
+        for (size_t cur_elem = stack->size; cur_elem < stack->capacity; ++cur_elem)
+        {
+            PrintToLogs("\t\t [%d] = %lg (Poison!)\n", cur_elem, stack->data[cur_elem]);
+        }
+    )
 }

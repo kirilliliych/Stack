@@ -59,4 +59,6 @@ void StackBackwardMemoryRealloc(Stack_t *stack);
 
 void StackDump(FILE* out, Stack_t *stack, location_t location);
 
+void PrintArray(FILE *file, Stack_t *stack);
+
 #endif

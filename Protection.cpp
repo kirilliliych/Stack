@@ -1,37 +1,14 @@
 #include "Protection.h"
 
-void PrintArray(FILE *logs, Stack_t *stack)
-{
-    IF_CANARY_LEVEL_PROTECTION
-    (
-        StackNullCheck(stack);
-    )
-
-    for (size_t cur_elem = 0; cur_elem < stack->size; ++cur_elem)
-    {
-        fprintf(logs, "\t\t*[%d] = %lg\n", cur_elem, stack->data[cur_elem]);
-    }
-
-    IF_CANARY_LEVEL_PROTECTION
-    (
-        for (size_t cur_elem = stack->size; cur_elem < stack->capacity; ++cur_elem)
-        {
-            fprintf(logs, "\t\t[%d] = %lg (Poison!)\n", cur_elem, stack->data[cur_elem]);
-        }
-    )
-}
-
 IF_CANARY_LEVEL_PROTECTION
 (
     void StackNullCheck(Stack_t *stack)
     {
         if (stack == nullptr)
         {
-            fprintf(logs, "Stack (ERROR NULLPTR) [0x000000], file %s line %d function %s\n\n\n", __FILE__, __LINE__, __func__);
+            PrintToLogs("Stack (ERROR NULLPTR) [0x000000], file %s line %d function %s\n\n\n", _LOCATION_);
 
             printf("ERROR: exiting programme, check logs.txt\n");
-
-            fflush(logs);
 
             abort();
         }
